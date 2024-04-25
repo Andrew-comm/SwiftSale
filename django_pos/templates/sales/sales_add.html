@@ -196,7 +196,7 @@
 
             //Update the sale subtotal, grand total, and tax amount
             this.items.sub_total = roundTo(sub_total, 2);
-            this.items.grand_total = roundTo(this.items.sub_total, 2);
+            this.items.grand_total = roundTo(this.items.sub_total + this.items.tax_amount, 2);
             this.items.tax_amount = roundTo(this.items.sub_total * (tax_percentage / 100), 2);
     
             $('input[name="sub_total"]').val(this.items.sub_total);

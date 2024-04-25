@@ -24,7 +24,7 @@
 <div class="row">
     <div class="card col-md-8">
         <div class="card-body">
-            <form action="{% url 'products:products_add' %}"  method="post">
+            <form action="{% url 'products:products_add' %}" method="post">
                 {% csrf_token %}
                 <div class="form-row">
                     <div class="form-group col-md-8">
@@ -48,7 +48,7 @@
                     </div>
                     <div class="form-group col-md-4">
                         <label for="category">Category</label>
-                        <select name="category" class="form-control" required>
+                        <select id="category" name="category" class="form-control" required>
                             <option value="" selected disabled hidden>Select the category</option>
                             {% for category in categories %}
                             <option value="{{category.id}}">{{category.name}}</option>
@@ -59,8 +59,17 @@
 
                 <div class="form-row">
                     <div class="form-group col-md-8">
+                        <label for="subcategory">Subcategory</label>
+                        <select id="subcategory" name="subcategory" class="form-control" required>
+                            <option value="" selected disabled hidden>Select the subcategory</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-8">
                         <label for="inputPrice">Price</label>
-                        <input type="number" name="price" step="any"  class="form-control" placeholder="10.99" required>
+                        <input type="number" name="price" step="any" class="form-control" placeholder="10.99" required>
                     </div>
                 </div>
                 
@@ -74,4 +83,27 @@
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %}
+<script>
+    // Script to fetch and update subcategories based on the selected category
+    document.getElementById('category').addEventListener('change', function() {
+        var categoryId = this.value;
+        var subcategorySelect = document.getElementById('subcategory');
+
+        // Clear existing options
+        subcategorySelect.innerHTML = '<option value="" selected disabled hidden>Select the subcategory</option>';
+
+        // Fetch subcategories for the selected category
+        fetch(`/api/subcategories/?category=${categoryId}`)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(subcategory => {
+                    var option = document.createElement('option');
+                    option.value = subcategory.id;
+                    option.text = subcategory.name;
+                    subcategorySelect.appendChild(option);
+                });
+            });
+    });
+</script>
+{% endblock javascripts %}

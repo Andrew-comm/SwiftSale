@@ -11,7 +11,7 @@ class Sale(models.Model):
     sub_total = models.FloatField(default=0)
     grand_total = models.FloatField(default=0)
     tax_amount = models.FloatField(default=0)
-    tax_percentage = models.FloatField(default=0)
+    tax_percentage = models.FloatField(default=16)
     amount_payed = models.FloatField(default=0)
     amount_change = models.FloatField(default=0)
 

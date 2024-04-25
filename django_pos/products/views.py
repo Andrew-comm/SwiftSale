@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from .models import Category, Product
+from .models import Category, Product,SubCategory
 
 
 @login_required(login_url="/accounts/login/")
@@ -134,56 +134,164 @@ def categories_delete_view(request, category_id):
             request, 'There was an error during the elimination!', extra_tags="danger")
         print(e)
         return redirect('products:categories_list')
+    
+    #subcategories
+@login_required(login_url="/accounts/login/")
+def subcategories_list_view(request):
+    context = {
+        "active_icon": "products_categories",
+        "subcategories": SubCategory.objects.all()
+    }
+    return render(request, "products/subcategories.html", context=context)
+
+
+@login_required(login_url="/accounts/login/")
+def subcategories_add_view(request):
+    context = {
+        "active_icon": "products_categories",
+    }
+
+    if request.method == 'POST':
+        data = request.POST
+
+        category_id = data['category']
+
+        try:
+            category = Category.objects.get(id=category_id)
+
+            subcategory = SubCategory.objects.create(
+                category=category,
+                name=data['name']
+            )
+
+            subcategory.save()
+
+            messages.success(request, 'Subcategory: ' +
+                             subcategory.name + ' created successfully!', extra_tags="success")
+            return redirect('products:subcategories_list')
+        except Exception as e:
+            messages.error(request, 'There was an error during the creation!',
+                           extra_tags="danger")
+            print(e)
+            return redirect('products:subcategories_add')
+
+    return render(request, "products/subcategories_add.html", context=context)
+
+
+@login_required(login_url="/accounts/login/")
+def subcategories_update_view(request, subcategory_id):
+    try:
+        subcategory = SubCategory.objects.get(id=subcategory_id)
+    except Exception as e:
+        messages.success(
+            request, 'There was an error trying to get the subcategory!', extra_tags="danger")
+        print(e)
+        return redirect('products:subcategories_list')
+
+    context = {
+        "active_icon": "products_categories",
+        "subcategory": subcategory
+    }
+
+    if request.method == 'POST':
+        try:
+            data = request.POST
+
+            subcategory.name = data['name']
+            subcategory.save()
+
+            messages.success(request, '¡Subcategory: ' + subcategory.name +
+                             ' updated successfully!', extra_tags="success")
+            return redirect('products:subcategories_list')
+        except Exception as e:
+            messages.error(
+                request, 'There was an error during the update!', extra_tags="danger")
+            print(e)
+            return redirect('products:subcategories_list')
+
+    return render(request, "products/subcategories_update.html", context=context)
+
+
+@login_required(login_url="/accounts/login/")
+def subcategories_delete_view(request, subcategory_id):
+    try:
+        subcategory = SubCategory.objects.get(id=subcategory_id)
+        subcategory.delete()
+        messages.success(request, '¡Subcategory: ' + subcategory.name +
+                         ' deleted!', extra_tags="success")
+        return redirect('products:subcategories_list')
+    except Exception as e:
+        messages.error(
+            request, 'There was an error during the deletion!', extra_tags="danger")
+        print(e)
+        return redirect('products:subcategories_list')
 
 
 @login_required(login_url="/accounts/login/")
 def products_list_view(request):
-    context = {
-        "active_icon": "products",
-        "products": Product.objects.all()
-    }
-    return render(request, "products/products.html", context=context)
+    if request.method == "POST" and "sale" in request.POST:
+        product_id = request.POST.get("product_id")
+        quantity_sold = int(request.POST.get("quantity_sold"))
+        product = Product.objects.get(id=product_id)
+        if product.stock >= quantity_sold:
+            # Update product stock
+            product.stock -= quantity_sold
+            product.save()
+            # Here you might want to add additional logic for sales recording, such as updating total sales, etc.
+        else:
+            # Handle insufficient stock situation, you can redirect or render an error message
+            return render(request, "error.html", {"message": "Insufficient stock!"})
+        return redirect("products_list")  # Redirect back to the products list page
+    else:
+        products = Product.objects.all()
+        context = {
+            "active_icon": "products",
+            "products": products
+        }
+        return render(request, "products/products.html", context=context)
+
 
 
 @login_required(login_url="/accounts/login/")
 def products_add_view(request):
+    categories = Category.objects.filter(status="ACTIVE").prefetch_related('subcategories')  # Fetch categories with subcategories
     context = {
         "active_icon": "products_categories",
-        "product_status": Product.status.field.choices,
-        "categories": Category.objects.all().filter(status="ACTIVE")
+        "product_status": Product.STATUS_CHOICES,
+        "categories": categories
     }
 
     if request.method == 'POST':
         # Save the POST arguments
         data = request.POST
 
+        category_id = data['category']
+        subcategory_id = data['subcategory']
+
         attributes = {
             "name": data['name'],
             "status": data['state'],
             "description": data['description'],
-            "category": Category.objects.get(id=data['category']),
+            "category": Category.objects.get(id=category_id),
             "price": data['price']
         }
 
+        if subcategory_id:
+            attributes['subcategory'] = SubCategory.objects.get(id=subcategory_id)
+
         # Check if a product with the same attributes exists
         if Product.objects.filter(**attributes).exists():
-            messages.error(request, 'Product already exists!',
-                           extra_tags="warning")
+            messages.error(request, 'Product already exists!', extra_tags="warning")
             return redirect('products:products_add')
 
         try:
             # Create the product
             new_product = Product.objects.create(**attributes)
 
-            # If it doesn't exist, save it
-            new_product.save()
-
-            messages.success(request, 'Product: ' +
-                             attributes["name"] + ' created successfully!', extra_tags="success")
+            messages.success(request, 'Product: ' + attributes["name"] + ' created successfully!', extra_tags="success")
             return redirect('products:products_list')
         except Exception as e:
-            messages.success(
-                request, 'There was an error during the creation!', extra_tags="danger")
+            messages.success(request, 'There was an error during the creation!', extra_tags="danger")
             print(e)
             return redirect('products:products_add')
 
@@ -192,65 +300,52 @@ def products_add_view(request):
 
 @login_required(login_url="/accounts/login/")
 def products_update_view(request, product_id):
-    """
-    Args:
-        request:
-        product_id : The product's ID that will be updated
-    """
-
-    # Get the product
     try:
-        # Get the product to update
         product = Product.objects.get(id=product_id)
     except Exception as e:
-        messages.success(
-            request, 'There was an error trying to get the product!', extra_tags="danger")
+        messages.success(request, 'There was an error trying to get the product!', extra_tags="danger")
         print(e)
         return redirect('products:products_list')
 
+    categories = Category.objects.all().prefetch_related('subcategories')
     context = {
         "active_icon": "products",
-        "product_status": Product.status.field.choices,
+        "product_status": Product.STATUS_CHOICES,
         "product": product,
-        "categories": Category.objects.all()
+        "categories": categories
     }
 
     if request.method == 'POST':
         try:
-            # Save the POST arguments
             data = request.POST
+            category_id = data['category']
+            subcategory_id = data['subcategory']
 
             attributes = {
                 "name": data['name'],
                 "status": data['state'],
                 "description": data['description'],
-                "category": Category.objects.get(id=data['category']),
+                "category": Category.objects.get(id=category_id),
                 "price": data['price']
             }
 
-            # Check if a product with the same attributes exists
-            if Product.objects.filter(**attributes).exists():
-                messages.error(request, 'Product already exists!',
-                               extra_tags="warning")
+            if subcategory_id:
+                attributes['subcategory'] = SubCategory.objects.get(id=subcategory_id)
+
+            if Product.objects.filter(**attributes).exclude(id=product_id).exists():
+                messages.error(request, 'Product already exists!', extra_tags="warning")
                 return redirect('products:products_add')
 
-            # Get the product to update
-            product = Product.objects.filter(
-                id=product_id).update(**attributes)
+            Product.objects.filter(id=product_id).update(**attributes)
 
-            product = Product.objects.get(id=product_id)
-
-            messages.success(request, '¡Product: ' + product.name +
-                             ' updated successfully!', extra_tags="success")
+            messages.success(request, 'Product: ' + product.name + ' updated successfully!', extra_tags="success")
             return redirect('products:products_list')
         except Exception as e:
-            messages.success(
-                request, 'There was an error during the update!', extra_tags="danger")
+            messages.success(request, 'There was an error during the update!', extra_tags="danger")
             print(e)
             return redirect('products:products_list')
 
     return render(request, "products/products_update.html", context=context)
-
 
 @login_required(login_url="/accounts/login/")
 def products_delete_view(request, product_id):

@@ -15,6 +15,18 @@ urlpatterns = [
     path('categories/delete/<str:category_id>',
          views.categories_delete_view, name='categories_delete'),
 
+     #List subcategories
+     path('subcategories', views.subcategories_list_view, name='subcategories_list'),
+     # Add subcategory
+     path('subcategories/add', views.subcategories_add_view, name='subcategories_add'),
+     # Update subcategory
+     path('subcategories/update/<str:subcategory_id>',
+          views.subcategories_update_view, name='subcategories_update'),
+     # Delete subcategory
+     path('subcategories/delete/<str:subcategory_id>',
+          views.subcategories_delete_view, name='subcategories_delete'),
+
+          
     # List products
     path('', views.products_list_view, name='products_list'),
     # Add product

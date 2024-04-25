@@ -1,7 +1,7 @@
 {% extends "pos/base.html" %}
 {% load static %}
 <!-- Page title  -->
-{% block title %}Products{% endblock title %}
+{% block title %}Product subcategories{% endblock title %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
@@ -11,17 +11,17 @@
 {% endblock stylesheets %}
 
 <!-- Page Heading -->
-{% block heading %}Products{% endblock heading %}
+{% block heading %}Product subcategories{% endblock heading %}
 
 <!-- Page content  -->
 {% block content %}
 
-    <!--Create new product-->
+    <!--Create new subcategory-->
     <div class="row ml-0 mb-3">
-        <a href="{% url 'products:products_add' %}">
+        <a href="{% url 'products:subcategories_add' %}">
             <button type="button" class="btn btn-success font-weight-bold">
                     <i class="fas fa-plus mr-2"></i>
-                    Create new product
+                    Create new subcategory
             </button>
         </a>
     </div>
@@ -29,7 +29,7 @@
     <!-- DataTable -->
     <div class="card shadow mb-12">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Products</h6>
+            <h6 class="m-0 font-weight-bold text-primary">Subcategories</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -37,39 +37,23 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th style="width:5%">#</th>
-                            <th style="width:20%">Name</th>
-                            <th style="width:25%">Description</th>
-                            <th style="width:15%">Category</th>
-                            <th class="text-center" style="width:10%">Stock</th>
-                            <th class="text-center" style="width:15%">Price</th>
-                            <th class="text-center" style="width:10%">Status</th>
-                            <th class="text-center" style="width:10%">Actions</th>
+                            <th style="width:7%">#</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th class="text-center" style="width:15%">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for p in products %}
+                        {% for subcategory in subcategories %}
                         <tr>
-                            <td>{{p.id}}</td>
-                            <td>{{forloop.counter}}</td>
-                            <td>{{p.name}}</td>
-                            <td>{{p.description}}</td>
-                            <td>{{p.category}}</td>
-                            <td class="text-center">{{p.stock}}</td>
-                            <td class="text-right">{{p.price}} $</td>
-                            {% if p.status == "ACTIVE" %}
-                            <td class="text-center">
-                                <span class="badge badge-success" style="font-size:0.8em;">{{p.status}}</span>
-                            </td>
-                            {% elif p.status == "INACTIVE" %}
-                            <td class="text-center">
-                                <span class="badge badge-danger" style="font-size:0.8em;">{{p.status}}</span>
-                            </td>
-                            {% endif %}
+                            <td>{{ subcategory.id }}</td>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ subcategory.name }}</td>
+                            <td>{{ subcategory.category.name }}</td>
                             <td class="text-center">
                                 <!--Update-->
-                                <a href="{% url 'products:products_update' p.id %}" class="text-decoration-none">
-                                    <button  type="button" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" title="Update product">
+                                <a href="{% url 'products:subcategories_update' subcategory.id %}" class="text-decoration-none">
+                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" title="Update subcategory">
                                         <i class="fas fa-pen"></i>
                                     </button>
                                 </a>
@@ -86,19 +70,18 @@
                                     <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="exampleModalLabel">Delete product</h5>
+                                            <h5 class="modal-title" id="exampleModalLabel">Delete subcategory</h5>
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
                                         <div id="updateThisText" class="modal-body">
-                                            
+                                            Are you sure you want to delete the subcategory: {{ subcategory.name }}?
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                            <a href="#" class="text-decoration-none">
-                                            <a id="updateThisURL" href="{% url 'products:products_delete' p.id %}" class="text-decoration-none">
-                                                <button  type="button"  class="btn btn-danger">Delete</button>
+                                            <a id="updateThisURL" href="{% url 'products:subcategories_delete' subcategory.id %}" class="text-decoration-none">
+                                                <button type="button"  class="btn btn-danger">Delete</button>
                                             </a>
                                         </div>
                                     </div>
@@ -135,7 +118,7 @@
 <script>
     // Call the dataTables jQuery plugin
     $(document).ready(function() {
-        tblProducts = $('#dataTable').DataTable({
+        tblSubcategories = $('#dataTable').DataTable({
             dom: 'Bfrtip', // Buttons are draw at this element
             buttons: [
                 {
@@ -144,7 +127,7 @@
                 titleAttr: 'Print',
                 className: 'btn btn-info',
                 exportOptions: {
-                    columns: [ 0, 1, 2, 3 ,4, 5 ]
+                    columns: [ 0, 1, 2, 3 ]
                 }            
                 },
                 {
@@ -153,7 +136,7 @@
                     titleAttr: 'Download Excel',
                     className: 'btn btn-success ml-2',
                     exportOptions: {
-                        columns: [ 0, 1, 2, 3 ,4, 5 ]
+                        columns: [ 0, 1, 2, 3 ]
                     } 
                 },
                 {
@@ -166,7 +149,7 @@
                     pageSize: 'A4',
                     title: '*',
                     exportOptions: {
-                        columns: [ 0, 1, 2, 3 ,4, 5 ]
+                        columns: [ 0, 1, 2, 3 ]
                     },
                     customize: function (doc) {
                         doc.styles = {
@@ -193,7 +176,7 @@
                                 alignment: 'center'
                             }
                         };
-                        doc.content[1].table.widths = ['10%', '10%', '30%', '30%', '10%', '20%'];
+                        doc.content[1].table.widths = ['10%', '10%', '30%', '40%'];
                         doc.content[1].margin = [0, 35, 0, 0];
                         doc.content[1].layout = {};
                         doc['footer'] = (function (page, pages) {
@@ -230,21 +213,19 @@
         });
     });
 
-// Alert when trying to delete a product
-$('#dataTable tbody')
-    // Event when whe try to delete a product
+    // Alert when trying to delete a subcategory
+    $('#dataTable tbody')
+    // Event when whe try to delete a subcategory
     // We update the text, and href of the modal delete button
     .on('click', 'button[rel="delete"]', function () {
     // Row variable
-    var tr = tblProducts.cell($(this).closest('td, li')).index();
-    row_data = ( tblProducts.row(tr.row).data());
-    product_id = row_data[0];
-    product_name = row_data[2]
-    new_delete_url  = 'delete/' + product_id;
-    document.getElementById("updateThisText").innerHTML = "Are you sure you want to delete the product:  " + product_name + "?";
+    var tr = tblSubcategories.cell($(this).closest('td, li')).index();
+    row_data = ( tblSubcategories.row(tr.row).data());
+    subcategory_id = row_data[0];
+    subcategory_name = row_data[2]
+    new_delete_url  = 'subcategories/delete/' + subcategory_id;
+    document.getElementById("updateThisText").innerHTML = "Are you sure you want to delete the subcategory:  " + subcategory_name + "?";
     document.getElementById("updateThisURL").href=new_delete_url;
     });
-
-
 </script>
 {% endblock javascripts %}

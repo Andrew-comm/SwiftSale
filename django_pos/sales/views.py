@@ -22,7 +22,7 @@ def is_ajax(request):
 def sales_list_view(request):
     context = {
         "active_icon": "sales",
-        "sales": Sale.objects.all()
+        "sales": Sale.objects.all().order_by("-date_added")
     }
     return render(request, "sales/sales.html", context=context)
 
@@ -51,29 +51,39 @@ def sales_add_view(request):
             try:
                 # Create the sale
                 new_sale = Sale.objects.create(**sale_attributes)
-                new_sale.save()
-                # Create the sale details
+
+                # Update the stock of each product sold
                 products = data["products"]
-
-                for product in products:
-                    detail_attributes = {
-                        "sale": Sale.objects.get(id=new_sale.id),
-                        "product": Product.objects.get(id=int(product["id"])),
-                        "price": product["price"],
-                        "quantity": product["quantity"],
-                        "total_detail": product["total_product"]
-                    }
-                    sale_detail_new = SaleDetail.objects.create(
-                        **detail_attributes)
-                    sale_detail_new.save()
-
-                print("Sale saved")
+                for product_data in products:
+                    product_id = int(product_data["id"])
+                    quantity_sold = int(product_data["quantity"])
+                    product = Product.objects.get(id=product_id)
+                    if product.stock >= quantity_sold:
+                        # Update product stock
+                        product.stock -= quantity_sold
+                        product.save()
+                        # Create the sale detail
+                        detail_attributes = {
+                            "sale": new_sale,
+                            "product": product,
+                            "price": float(product_data["price"]),
+                            "quantity": quantity_sold,
+                            "total_detail": float(product_data["total_product"])
+                        }
+                        SaleDetail.objects.create(**detail_attributes)
+                    else:
+                        # Handle insufficient stock situation
+                        messages.error(
+                            request, f'Insufficient stock for product: {product.name}')
+                        # Rollback the sale
+                        new_sale.delete()
+                        return redirect('sales:sales_add')
 
                 messages.success(
                     request, 'Sale created successfully!', extra_tags="success")
 
             except Exception as e:
-                messages.success(
+                messages.error(
                     request, 'There was an error during the creation!', extra_tags="danger")
 
         return redirect('sales:sales_list')

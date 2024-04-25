@@ -52,13 +52,29 @@
                     </div>
                     <div class="form-group col-md-4">
                         <label for="category">Category</label>
-                        <select name="category" class="form-control" required>
+                        <select id="category" name="category" class="form-control" required>
                             <option value="" selected disabled hidden>Select the category</option>
                             {% for category in categories %}
                                 {% if product.category.id == category.id%}
                                 <option value="{{category.id}}" selected>{{category.name}}</option>
                                 {% else %}
                                 <option value="{{category.id}}">{{category.name}}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        <label for="subcategory">Subcategory</label>
+                        <select id="subcategory" name="subcategory" class="form-control" required>
+                            <option value="" selected disabled hidden>Select the subcategory</option>
+                            {% for subcategory in product.category.subcategories.all %}
+                                {% if product.subcategory and product.subcategory.id == subcategory.id %}
+                                <option value="{{subcategory.id}}" selected>{{subcategory.name}}</option>
+                                {% else %}
+                                <option value="{{subcategory.id}}">{{subcategory.name}}</option>
                                 {% endif %}
                             {% endfor %}
                         </select>
