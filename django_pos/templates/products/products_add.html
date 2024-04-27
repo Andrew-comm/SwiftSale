@@ -10,6 +10,7 @@
 {% block heading %}Add product{% endblock heading %}
 
 <!-- Page content  -->
+<!-- Page content  -->
 {% block content %}
 <!--Go back-->
 <div class="row ml-0 mb-3">
@@ -29,7 +30,7 @@
                 <div class="form-row">
                     <div class="form-group col-md-8">
                         <label for="inputDescription">Name</label>
-                        <input type="text" class="form-control" name="name" placeholder="Chicken Breasts..." required>
+                        <input type="text" class="form-control" name="name" placeholder="Name..." required>
                     </div>
                     <div class="form-group col-md-4">
                         <label for="state">State</label>
@@ -44,7 +45,7 @@
                 <div class="form-row">
                     <div class="form-group col-md-8">
                         <label for="inputDescription">Description</label>
-                        <input type="text" name="description" class="form-control" placeholder="Freshness Guaranteed Chicken Breast, 2.25 - 3.2 lb..." required>
+                        <input type="text" name="description" class="form-control" placeholder="Description..." required>
                     </div>
                     <div class="form-group col-md-4">
                         <label for="category">Category</label>
@@ -62,14 +63,30 @@
                         <label for="subcategory">Subcategory</label>
                         <select id="subcategory" name="subcategory" class="form-control" required>
                             <option value="" selected disabled hidden>Select the subcategory</option>
+                            {% for category in categories %}
+                                {% for subcategory in category.subcategories.all %}
+                                    <option value="{{ subcategory.id }}">{{ subcategory.name }}</option>
+                                {% endfor %}
+                            {% endfor %}
                         </select>
                     </div>
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group col-md-8">
+                    <div class="form-group col-md-4">
+                        <label for="inputBuyingPrice">Buying Price</label>
+                        <input type="number" name="buying_price" step="any" class="form-control" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group col-md-4">
                         <label for="inputPrice">Price</label>
-                        <input type="number" name="price" step="any" class="form-control" placeholder="10.99" required>
+                        <input type="number" name="price" step="any" class="form-control" placeholder="0.00" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="inputStock">Stock</label>
+                        <input type="number" name="stock" class="form-control" placeholder="10" required>
                     </div>
                 </div>
                 
@@ -81,29 +98,3 @@
     </div>
 </div>
 {% endblock content %}
-
-<!-- Specific Page JS goes HERE  -->
-{% block javascripts %}
-<script>
-    // Script to fetch and update subcategories based on the selected category
-    document.getElementById('category').addEventListener('change', function() {
-        var categoryId = this.value;
-        var subcategorySelect = document.getElementById('subcategory');
-
-        // Clear existing options
-        subcategorySelect.innerHTML = '<option value="" selected disabled hidden>Select the subcategory</option>';
-
-        // Fetch subcategories for the selected category
-        fetch(`/api/subcategories/?category=${categoryId}`)
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(subcategory => {
-                    var option = document.createElement('option');
-                    option.value = subcategory.id;
-                    option.text = subcategory.name;
-                    subcategorySelect.appendChild(option);
-                });
-            });
-    });
-</script>
-{% endblock javascripts %}

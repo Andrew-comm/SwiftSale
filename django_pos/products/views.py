@@ -149,6 +149,7 @@ def subcategories_list_view(request):
 def subcategories_add_view(request):
     context = {
         "active_icon": "products_categories",
+        "categories": Category.objects.all(),  # Fetch all categories
     }
 
     if request.method == 'POST':
@@ -244,9 +245,21 @@ def products_list_view(request):
         return redirect("products_list")  # Redirect back to the products list page
     else:
         products = Product.objects.all()
+        subcategories = SubCategory.objects.all()  # Fetch all subcategories for filtering
+        search_query = request.GET.get('search')
+        subcategory_filter = request.GET.get('subcategory_filter')
+        
+        if search_query:
+            products = products.filter(name__icontains=search_query)
+        
+        if subcategory_filter:
+            products = products.filter(subcategory__id=subcategory_filter)
+        
         context = {
             "active_icon": "products",
-            "products": products
+            "products": products,
+            "subcategories": subcategories,
+            "selected_subcategory": subcategory_filter  # Added for highlighting selected subcategory in the dropdown
         }
         return render(request, "products/products.html", context=context)
 
@@ -273,7 +286,9 @@ def products_add_view(request):
             "status": data['state'],
             "description": data['description'],
             "category": Category.objects.get(id=category_id),
-            "price": data['price']
+            "price": data['price'],
+            "buying_price": data['buying_price'],  # Include buying price here
+            "stock": data['stock']  # Include stock count here
         }
 
         if subcategory_id:
@@ -291,7 +306,7 @@ def products_add_view(request):
             messages.success(request, 'Product: ' + attributes["name"] + ' created successfully!', extra_tags="success")
             return redirect('products:products_list')
         except Exception as e:
-            messages.success(request, 'There was an error during the creation!', extra_tags="danger")
+            messages.error(request, 'There was an error during the creation!', extra_tags="danger")
             print(e)
             return redirect('products:products_add')
 
@@ -326,7 +341,9 @@ def products_update_view(request, product_id):
                 "status": data['state'],
                 "description": data['description'],
                 "category": Category.objects.get(id=category_id),
-                "price": data['price']
+                "price": data['price'],
+                "buying_price": data['buying_price'],  # Include buying price here
+                "stock": data['stock']  # Include stock count here
             }
 
             if subcategory_id:
@@ -341,11 +358,12 @@ def products_update_view(request, product_id):
             messages.success(request, 'Product: ' + product.name + ' updated successfully!', extra_tags="success")
             return redirect('products:products_list')
         except Exception as e:
-            messages.success(request, 'There was an error during the update!', extra_tags="danger")
+            messages.error(request, 'There was an error during the update!', extra_tags="danger")
             print(e)
             return redirect('products:products_list')
 
     return render(request, "products/products_update.html", context=context)
+
 
 @login_required(login_url="/accounts/login/")
 def products_delete_view(request, product_id):

@@ -62,7 +62,7 @@ class Product(models.Model):
         blank=True,
         null=True,
     )
-
+    buying_price = models.FloatField(default=0)
     price = models.FloatField(default=0)
     stock = models.PositiveIntegerField(default=0)  # New field for stock count
 

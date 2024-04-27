@@ -1,11 +1,10 @@
 from django.db import models
-import django.utils.timezone
 from customers.models import Customer
 from products.models import Product
 
 
-class Sale(models.Model):
-    date_added = models.DateTimeField(default=django.utils.timezone.now)
+class Sale(models.Model):    
+    date_added = models.DateTimeField(auto_now_add=True)
     customer = models.ForeignKey(
         Customer, models.DO_NOTHING, db_column='customer')
     sub_total = models.FloatField(default=0)
