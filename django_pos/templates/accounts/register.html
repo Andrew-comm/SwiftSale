@@ -53,13 +53,10 @@
                                     </div>
                                     <form class="user" method="post">
                                         {% csrf_token %}
-
-                                        {{form.as_p}}
-                                        
+                                        {{ form.as_p }}
                                         <button type="submit" name="register" class="btn btn-primary btn-user btn-block">Sign Up</button>
                                     </form>
                                     <hr>
-                                    
                                     <div class="text-center">
                                         <a class="small" href="{% url 'authentication:login' %}">Already have an account? Login!</a>
                                     </div>

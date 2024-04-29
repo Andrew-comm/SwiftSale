@@ -183,32 +183,37 @@ def subcategories_add_view(request):
 def subcategories_update_view(request, subcategory_id):
     try:
         subcategory = SubCategory.objects.get(id=subcategory_id)
-    except Exception as e:
-        messages.success(
-            request, 'There was an error trying to get the subcategory!', extra_tags="danger")
-        print(e)
+    except SubCategory.DoesNotExist:
+        messages.error(request, 'Subcategory does not exist!', extra_tags="danger")
         return redirect('products:subcategories_list')
+
+    categories = Category.objects.all()  # Retrieve all categories for the dropdown
+
+    if request.method == 'POST':
+        category_id = request.POST.get('category')
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+
+        try:
+            category = Category.objects.get(id=category_id)
+
+            subcategory.category = category
+            subcategory.name = name
+            subcategory.description = description
+            subcategory.save()
+
+            messages.success(request, f'Subcategory "{subcategory.name}" updated successfully!', extra_tags="success")
+            return redirect('products:subcategories_list')
+        except Category.DoesNotExist:
+            messages.error(request, 'Selected category does not exist!', extra_tags="danger")
+        except Exception as e:
+            messages.error(request, f'Error updating subcategory: {str(e)}', extra_tags="danger")
 
     context = {
         "active_icon": "products_categories",
-        "subcategory": subcategory
+        "subcategory": subcategory,
+        "categories": categories,
     }
-
-    if request.method == 'POST':
-        try:
-            data = request.POST
-
-            subcategory.name = data['name']
-            subcategory.save()
-
-            messages.success(request, '¡Subcategory: ' + subcategory.name +
-                             ' updated successfully!', extra_tags="success")
-            return redirect('products:subcategories_list')
-        except Exception as e:
-            messages.error(
-                request, 'There was an error during the update!', extra_tags="danger")
-            print(e)
-            return redirect('products:subcategories_list')
 
     return render(request, "products/subcategories_update.html", context=context)
 

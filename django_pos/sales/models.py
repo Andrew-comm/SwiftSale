@@ -27,7 +27,7 @@ class Sale(models.Model):
 
 class SaleDetail(models.Model):
     sale = models.ForeignKey(
-        Sale, models.DO_NOTHING, db_column='sale')
+        Sale, on_delete=models.CASCADE)
     product = models.ForeignKey(
         Product, models.DO_NOTHING, db_column='product')
     price = models.FloatField()

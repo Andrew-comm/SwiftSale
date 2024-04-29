@@ -38,11 +38,11 @@ def register_user(request):
             raw_password = form.cleaned_data.get("password1")
             user = authenticate(username=username, password=raw_password)
 
-            msg = 'User created - please <a href="/login">login</a>.'
-            success = True
-
-            # return redirect("/login/")
-
+            if user is not None:
+                login(request, user)  # Login the user after successful registration
+                return redirect("authentication:login")  # Redirect to the login page using the named URL
+            else:
+                msg = 'User created, but an error occurred during login. Please try logging in.'
         else:
             msg = 'Form is not valid'
     else:

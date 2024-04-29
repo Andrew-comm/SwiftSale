@@ -15,41 +15,48 @@ def index(request):
     today_start = datetime.combine(date.today(), datetime.min.time())
     today_end = today_start + timedelta(days=1)
 
-
-     # Calculate daily profit for the past 24 hours
-    daily_profit = SaleDetail.objects.filter(
-        sale__date_added__gte=today_start,
-        sale__date_added__lt=today_end
+    # Calculate daily profit for the past 24 hours
+    daily_profit = Sale.objects.filter(
+        date_added__gte=today_start,
+        date_added__lt=today_end
+    ).annotate(
+        total_cost=Coalesce(Sum(F('saledetail__product__buying_price') * F('saledetail__quantity')), Value(0), output_field=FloatField())
     ).aggregate(
         daily_profit=Coalesce(
-            Sum(F('sale__amount_payed') - F('product__buying_price')),
+            Sum(F('amount_payed') - F('total_cost')),
             Value(0.0),
             output_field=FloatField()
         )
     )['daily_profit']
-      # Calculate weekly profit
-    weekly_profit = SaleDetail.objects.filter(
-        sale__date_added__week=today.isocalendar()[1],
-        sale__date_added__year=year
+
+    # Calculate weekly profit
+    weekly_profit = Sale.objects.filter(
+        date_added__week=today.isocalendar()[1],
+        date_added__year=year
+    ).annotate(
+        total_cost=Coalesce(Sum(F('saledetail__product__buying_price') * F('saledetail__quantity')), Value(0), output_field=FloatField())
     ).aggregate(
         weekly_profit=Coalesce(
-            Sum(F('sale__amount_payed') - F('product__buying_price')),
+            Sum(F('amount_payed') - F('total_cost')),
             Value(0.0),
             output_field=FloatField()
         )
     )['weekly_profit']
 
     # Calculate monthly profit
-    monthly_profit = SaleDetail.objects.filter(
-        sale__date_added__year=year,
-        sale__date_added__month=today.month
+    monthly_profit = Sale.objects.filter(
+        date_added__year=year,
+        date_added__month=today.month
+    ).annotate(
+        total_cost=Coalesce(Sum(F('saledetail__product__buying_price') * F('saledetail__quantity')), Value(0), output_field=FloatField())
     ).aggregate(
         monthly_profit=Coalesce(
-            Sum(F('sale__amount_payed') - F('product__buying_price')),
+            Sum(F('amount_payed') - F('total_cost')),
             Value(0.0),
             output_field=FloatField()
         )
     )['monthly_profit']
+
 
     # Calculate daily, weekly, and monthly quantity of products sold
     daily_products_sold = Sale.objects.filter(date_added__date=today).aggregate(
